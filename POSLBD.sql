@@ -319,6 +319,7 @@ EXEC sp_EliminarUsuarios @usuario_id = 2;
 --Tabla Menu
 
 --CREATE
+
 USE POSLBD;
 GO
 
@@ -402,6 +403,7 @@ EXEC sp_EliminarPlatos @plato_id = 1;
 --TABLA INVENTARIO
 
 --CREATE
+
 CREATE PROCEDURE sp_InsertarInventario
     @proveedor_id INT,
     @cant_producto INT,
@@ -514,7 +516,6 @@ END;
 GO
 
 
-
 /*TESTING
 
 EXEC sp_InsertarProveedor @nombre_proveedor = 'Proveedor X', @contacto = 'contactoX@example.com';
@@ -610,8 +611,6 @@ END;
 GO
 
 
-
-
 /*TESTING
 
 EXEC sp_AgregarPedido 
@@ -638,6 +637,100 @@ EXEC sp_AgregarPedido
 	EXEC sp_EliminarPedido2 @pedido_id = 3;*/
 
 
+/*VISTAS
+
+Pedido por usuario*/
+
+CREATE VIEW vw_UsuarioPedidos AS
+SELECT 
+    u.usuario_id,
+    u.nombre AS nombre_usuario,
+    u.apellido AS apellido_usuario,
+    p.pedido_id,
+    p.plato_id,
+    p.promocion_id,
+    p.cantidad,
+    p.precio
+FROM Usuario u
+LEFT JOIN Pedido p ON u.usuario_id = p.usuario_id;
 
 
+--test SELECT * FROM vw_UsuarioPedidos;
 
+--Detalle de usuario
+
+CREATE VIEW vw_UsuariosConRoles AS
+SELECT 
+    usuario_id,
+    nombre,
+    apellido,
+    CASE 
+        WHEN rol = 1 THEN 'Administrador'
+        WHEN rol = 2 THEN 'Usuario Regular'
+        ELSE 'Desconocido'
+    END AS rol_descripcion
+FROM Usuario;
+GO
+
+-- test SELECT * FROM vw_UsuariosConRoles;
+
+--Detalle de inventario con proveedor
+
+CREATE VIEW vw_InventarioDetallado AS
+SELECT 
+    i.producto_id,
+    i.nombre_producto,
+    i.cant_producto,
+    p.nombre_proveedor,
+    p.contacto
+FROM Inventario i
+JOIN Proveedor p ON i.proveedor_id = p.proveedor_id;
+GO
+
+
+-- test SELECT * FROM  vw_InventarioDetallado;
+
+--VENTAS
+
+CREATE VIEW vw_VentasConDetalle AS
+SELECT 
+    v.venta_id,
+    v.fecha_venta,
+    p.pedido_id,
+    u.nombre AS cliente_nombre,
+    u.apellido AS cliente_apellido,
+    m.nombre_plato,
+    p.cantidad,
+    p.precio,
+    pm.tipo AS promocion_aplicada,
+    pa.total_pago
+FROM Venta v
+JOIN Pedido p ON v.pedido_id = p.pedido_id
+LEFT JOIN Usuario u ON p.usuario_id = u.usuario_id
+LEFT JOIN Menu m ON p.plato_id = m.plato_id
+LEFT JOIN Promocion pm ON p.promocion_id = pm.promo_id
+LEFT JOIN Pago pa ON v.pago_id = pa.pago_id;
+GO
+
+
+--test SELECT * FROM vw_VentasConDetalle;
+
+--REPORTES
+
+CREATE VIEW vw_ReportesResumen AS
+SELECT 
+    r.reporte_id,
+    r.fecha_reporte,
+    r.inicio_reporte,
+    r.final_reporte,
+    COUNT(v.venta_id) AS total_ventas,
+    SUM(p.precio * p.cantidad) AS total_ingresos
+FROM Reporte r
+LEFT JOIN Venta v ON r.venta_id = v.venta_id
+LEFT JOIN Pedido p ON v.pedido_id = p.pedido_id
+GROUP BY 
+    r.reporte_id, r.fecha_reporte, r.inicio_reporte, r.final_reporte;
+GO
+
+
+--test SELECT * FROM vw_ReportesResumen;
