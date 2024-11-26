@@ -1,4 +1,4 @@
-package Restaurante;
+package com.mycompany.restaurante;
 
 import javax.swing.*;
 import java.awt.*;

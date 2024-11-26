@@ -1,5 +1,6 @@
-package Restaurante;
+package com.mycompany.restaurante;
 
+import com.mycompany.restaurante.Menu;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
